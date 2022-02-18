@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -22,22 +25,43 @@ public class Main {
 
     private static void printFullMdFile(ArrayList<String> logRecord) {
 
-        System.out.println("# Personal activity:\n" +"> " + yourName + "\n");
+        var filename = formTimelogName(logRecord.get(0));
 
-        System.out.println("## " + formTimelogName(logRecord.get(0)) + "\n");
+        try {
+            File myFile = new File("./timelogs/" + filename + ".md");
+            if (myFile.createNewFile()) {
+                System.out.println("\033[42m" + "File created, the file name is: \"" + myFile.getName() + "\"" + "\033[0m");
+            } else {
+                System.out.println("\033[41m" + "Looks like you already have timelogs for this week" + "\033[0m");
+            }
+        } catch (IOException err) {
+            System.out.println("An error occured." + "\033[0m");
+            err.printStackTrace();
+        }
 
-        System.out.println("| **Date**  | **Time**      | **Duration**  | **Activity** |");
-        System.out.println("| --------  | ------------- | ------------  | ------------ |");
 
-        for (String record : logRecord) {   //# It prints
-            System.out.println(record);     //# the body of
-        }                                   //# MD table
+        try {
+            FileWriter saveLogs = new FileWriter("./timelogs/" + filename + ".md");
 
-        calculateWorkedMinutes(logRecord);
+            saveLogs.write("# Personal activity:\n" +"> " + yourName + "\n");
+            saveLogs.write("\n## " + filename + "\n\n");
+            saveLogs.write("| **Date**  | **Time**      | **Duration**  | **Activity** |\n");
+            saveLogs.write("| --------  | ------------- | ------------  | ------------ |\n");
 
-        int hoursOfWork = totalMinutes / 60;
-        int minutesOfWork = totalMinutes % 60;
-        System.out.println("|  | **Total:** | **" + hoursOfWork + "h " + minutesOfWork + "min** | |");
+            for (String record : logRecord) {       //# It prints
+                saveLogs.write(record + "\n");  //# the body of
+            }                                       //# MD table
+
+            calculateWorkedMinutes(logRecord);
+
+            int hoursOfWork = totalMinutes / 60;
+            int minutesOfWork = totalMinutes % 60;
+            saveLogs.write("|  | **Total:** | **" + hoursOfWork + "h " + minutesOfWork + "min** | |");
+
+            saveLogs.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void calculateWorkedMinutes(ArrayList<String> logRecord) {
